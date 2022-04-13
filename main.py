@@ -30,3 +30,6 @@ translated_tokens = model.generate(
 t = tokenizer.batch_decode(translated_tokens, skip_special_tokens=True)[0]
 
 print(t)
+
+
+
