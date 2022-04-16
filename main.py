@@ -1,6 +1,8 @@
+from torch.utils.data import TensorDataset, DataLoader
 from transformers import MBartForConditionalGeneration, MBart50TokenizerFast, PreTrainedTokenizerFast
 import json
 import pickle
+from tqdm import tqdm
 
 x_test = []
 y_test = []
@@ -11,40 +13,29 @@ with open('spanishval.json') as data_file:
         y_test.append(data[i]['translation']['es'])
 
 
-
-
 # article_en = "The head of the United Nations says there is no military solution in Syria"
 model = MBartForConditionalGeneration.from_pretrained("facebook/mbart-large-50-one-to-many-mmt")
 tokenizer = MBart50TokenizerFast.from_pretrained("facebook/mbart-large-50-one-to-many-mmt", src_lang="en_XX")
 
-# for i, x in enumerate(x_test):
-#     model_inputs = tokenizer(x, return_tensors="pt")
-#
-#     # translate from English to Spanish
-#     generated_tokens = model.generate(
-#         **model_inputs,
-#         forced_bos_token_id=tokenizer.lang_code_to_id["es_XX"]
-#     )
-#
-#     print(y_test[i], tokenizer.batch_decode(generated_tokens, skip_special_tokens=True))
+for i, x in tqdm(enumerate(x_test)):
+    model_inputs = tokenizer(x, return_tensors="pt")
+
+    # # translate from English to Spanish
+    generated_tokens = model.generate(
+        **model_inputs,
+        forced_bos_token_id=tokenizer.lang_code_to_id["es_XX"]
+    )
+
+    print(y_test[i], tokenizer.batch_decode(generated_tokens, skip_special_tokens=True))
 
 # fast_tokenizer = PreTrainedTokenizerFast(tokenizer_file="spanishval.json", return_tensors="pt")
 # model_inputs = fast_tokenizer
-model_inputs = tokenizer(x_test, return_tensors="pt", padding='longest')
 
-generated_tokens = model.generate(
-    **model_inputs,
-    forced_bos_token_id=tokenizer.lang_code_to_id["es_XX"]
-)
-print(tokenizer.batch_decode(tokenizer.lang_code_to_id["es_XX"]))
-
-# # => 'संयुक्त राष्ट्र के नेता कहते हैं कि सीरिया में कोई सैन्य समाधान नहीं है'
+# model_inputs = tokenizer(x_test, return_tensors="pt", padding='longest')
 #
-# # translate from English to Chinese
 # generated_tokens = model.generate(
 #     **model_inputs,
 #     forced_bos_token_id=tokenizer.lang_code_to_id["es_XX"]
 # )
-# tokenizer.batch_decode(generated_tokens, skip_special_tokens=True)
-#
-# # => '联合国首脑说,叙利亚没有军事解决办法'
+# print(tokenizer.batch_decode(tokenizer.lang_code_to_id["es_XX"]))
+
