@@ -1,35 +1,50 @@
-import torch
+from transformers import MBartForConditionalGeneration, MBart50TokenizerFast, PreTrainedTokenizerFast
+import json
+import pickle
 
-
-from transformers import MBartForConditionalGeneration, MBartTokenizer
-from transformers import MBartForConditionalGeneration, MBart50TokenizerFast
-
-model = MBartForConditionalGeneration.from_pretrained("facebook/mbart-large-50")
-tokenizer = MBart50TokenizerFast.from_pretrained("facebook/mbart-large-50-one-to-many-mmt", src_lang="en_XX", tgt_lang="es_XX")
-
-src_text = " hello world how are you"
-tgt_text = "hola mundo como estas"
-
-force_words = ["hola"]
-
-model_inputs = tokenizer(src_text, return_tensors="pt")
-with tokenizer.as_target_tokenizer():
-    labels = tokenizer(tgt_text, return_tensors="pt").input_ids
-
-model(**model_inputs, labels=labels)  # forward pass
-tokenizer = MBartTokenizer.from_pretrained("facebook/mbart-large-50-one-to-many-mmt", src_lang="en_XX")
-article = "hola mundo como estas"
-inputs = tokenizer(article, return_tensors="pt")
-force_words_ids = tokenizer(force_words, add_special_tokens=False).input_ids
-
-translated_tokens = model.generate(
-    **inputs, decoder_start_token_id=tokenizer.lang_code_to_id["es_XX"],
-    num_beams=10,
-    force_words_ids=force_words_ids
-    )
-t = tokenizer.batch_decode(translated_tokens, skip_special_tokens=True)[0]
-
-print(t)
+x_test = []
+y_test = []
+with open('spanishval.json') as data_file:
+    data = json.load(data_file)
+    for i in range(0, len(data)):
+        x_test.append(data[i]['translation']['en'])
+        y_test.append(data[i]['translation']['es'])
 
 
 
+
+# article_en = "The head of the United Nations says there is no military solution in Syria"
+model = MBartForConditionalGeneration.from_pretrained("facebook/mbart-large-50-one-to-many-mmt")
+tokenizer = MBart50TokenizerFast.from_pretrained("facebook/mbart-large-50-one-to-many-mmt", src_lang="en_XX")
+
+# for i, x in enumerate(x_test):
+#     model_inputs = tokenizer(x, return_tensors="pt")
+#
+#     # translate from English to Spanish
+#     generated_tokens = model.generate(
+#         **model_inputs,
+#         forced_bos_token_id=tokenizer.lang_code_to_id["es_XX"]
+#     )
+#
+#     print(y_test[i], tokenizer.batch_decode(generated_tokens, skip_special_tokens=True))
+
+# fast_tokenizer = PreTrainedTokenizerFast(tokenizer_file="spanishval.json", return_tensors="pt")
+# model_inputs = fast_tokenizer
+model_inputs = tokenizer(x_test, return_tensors="pt", padding='longest')
+
+generated_tokens = model.generate(
+    **model_inputs,
+    forced_bos_token_id=tokenizer.lang_code_to_id["es_XX"]
+)
+print(tokenizer.batch_decode(tokenizer.lang_code_to_id["es_XX"]))
+
+# # => 'संयुक्त राष्ट्र के नेता कहते हैं कि सीरिया में कोई सैन्य समाधान नहीं है'
+#
+# # translate from English to Chinese
+# generated_tokens = model.generate(
+#     **model_inputs,
+#     forced_bos_token_id=tokenizer.lang_code_to_id["es_XX"]
+# )
+# tokenizer.batch_decode(generated_tokens, skip_special_tokens=True)
+#
+# # => '联合国首脑说,叙利亚没有军事解决办法'
