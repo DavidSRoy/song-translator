@@ -1,19 +1,38 @@
-from torch.utils.data import TensorDataset, DataLoader
+# from torch.utils.data import TensorDataset, DataLoader
 from transformers import MBartForConditionalGeneration, MBart50TokenizerFast, PreTrainedTokenizerFast
 import json
-import pickle
+# import pickle
 from tqdm import tqdm
+import nltk
+nltk.download('words')
+# import re
 
+words = set(nltk.corpus.words.words())  # Words in English Dictionary
 x_test = []
 y_test = []
 with open('spanishval.json') as data_file:
     data = json.load(data_file)
     for i in range(0, len(data)):
-        x_test.append(data[i]['translation']['en'])
-        y_test.append(data[i]['translation']['es'])
+        skip = False
+        x = data[i]['translation']['en']
+        y = data[i]['translation']['es']
+
+        # not necessary for test data
+        # x = re.sub(r'[,\.;!:]', '', x)
+        # y = re.sub(r'[,\.;!:]', '', y)
+
+        for w in nltk.wordpunct_tokenize(x):
+            if w.isalpha() and w.lower() not in words:  # checks if alphanumeric string is in dictionary.
+                skip = True
+                break
+
+        if skip:
+            continue
+
+        x_test.append(x)
+        y_test.append(y)
 
 
-# article_en = "The head of the United Nations says there is no military solution in Syria"
 model = MBartForConditionalGeneration.from_pretrained("facebook/mbart-large-50-one-to-many-mmt")
 tokenizer = MBart50TokenizerFast.from_pretrained("facebook/mbart-large-50-one-to-many-mmt", src_lang="en_XX")
 
@@ -28,14 +47,4 @@ for i, x in tqdm(enumerate(x_test)):
 
     print(y_test[i], tokenizer.batch_decode(generated_tokens, skip_special_tokens=True))
 
-# fast_tokenizer = PreTrainedTokenizerFast(tokenizer_file="spanishval.json", return_tensors="pt")
-# model_inputs = fast_tokenizer
-
-# model_inputs = tokenizer(x_test, return_tensors="pt", padding='longest')
-#
-# generated_tokens = model.generate(
-#     **model_inputs,
-#     forced_bos_token_id=tokenizer.lang_code_to_id["es_XX"]
-# )
-# print(tokenizer.batch_decode(tokenizer.lang_code_to_id["es_XX"]))
 
