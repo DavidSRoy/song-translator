@@ -5,7 +5,7 @@ import json
 from tqdm import tqdm
 import nltk
 nltk.download('words')
-# import re
+import re
 
 words = set(nltk.corpus.words.words())  # Words in English Dictionary
 x_test = []
@@ -17,9 +17,9 @@ with open('spanishval.json') as data_file:
         x = data[i]['translation']['en']
         y = data[i]['translation']['es']
 
-        # not necessary for test data
-        # x = re.sub(r'[,\.;!:]', '', x)
-        # y = re.sub(r'[,\.;!:]', '', y)
+        # not sure if necessary for test data
+        x = re.sub(r'[,\.;!:]', '', x)
+        y = re.sub(r'[,\.;!:]', '', y)
 
         for w in nltk.wordpunct_tokenize(x):
             if w.isalpha() and w.lower() not in words:  # checks if alphanumeric string is in dictionary.
@@ -32,6 +32,7 @@ with open('spanishval.json') as data_file:
         x_test.append(x)
         y_test.append(y)
 
+print(x_test)
 
 model = MBartForConditionalGeneration.from_pretrained("facebook/mbart-large-50-one-to-many-mmt")
 tokenizer = MBart50TokenizerFast.from_pretrained("facebook/mbart-large-50-one-to-many-mmt", src_lang="en_XX")
