@@ -11,12 +11,12 @@ def getNumSyllablesEN(sentence):
     lst = sentence.split(' ')
     total_ct = 0
     for word in lst:
-        try:
-            pro_list = pro.phones_for_word(word)
-            total_ct += pro.syllable_count(pro_list[0])
-        except:
-            print(word)
-            raise EOFError
+        # try:
+        pro_list = pro.phones_for_word(word)
+        total_ct += pro.syllable_count(pro_list[0])
+        # except:
+        #     print(word)
+
     return total_ct
 
 
@@ -34,6 +34,7 @@ def evaluate(sentence_en, sentence_es, sentence_es_actual):
 
     print(f'Syllable Score: {syllable_score}')
     print(f'Bleu Score: {bleu_score}')
+
     return (-pow(syllable_score, 2) * SYLLABLE_WEIGHT + SYLLABLE_THRESHOLD) + bleu_score * BLEU_WEIGHT
 
 

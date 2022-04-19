@@ -14,6 +14,7 @@ def main():
     words = set(nltk.corpus.words.words())  # Words in English Dictionary
     x_test = []
     y_test = []
+
     with open('spanishval.json') as data_file:
         data = json.load(data_file)
         for i in range(0, len(data)):
@@ -53,11 +54,11 @@ def main():
 
         sentence_es = tokenizer.batch_decode(generated_tokens, skip_special_tokens=True)
         sentence_es_actual = y_test[i]
-        print(sentence_es)
+        print(sentence_es[0])
         print(sentence_es_actual)
 
         try:
-            evaluations.append(evaluate(sentence_en, sentence_es, sentence_es_actual))
+            evaluations.append(evaluate(sentence_en, sentence_es[0], sentence_es_actual))
         except:
             continue
 
