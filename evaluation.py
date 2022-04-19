@@ -25,13 +25,14 @@ def getNumSyllablesES(word):
 
 
 def getBleuScore(reference, candidate):
-    return sentence_bleu([reference], candidate)
+    return sentence_bleu(reference, candidate)
 
 
 def evaluate(sentence_en, sentence_es, sentence_es_actual):
     syllable_score = getNumSyllablesEN(sentence_en) - getNumSyllablesES(sentence_es)
     bleu_score = getBleuScore(sentence_es, sentence_es_actual)
 
+    print(f' {sentence_es} + {sentence_es_actual}')
     print(f'Syllable Score: {syllable_score}')
     print(f'Bleu Score: {bleu_score}')
 

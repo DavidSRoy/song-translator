@@ -49,18 +49,23 @@ def main():
         # # translate from English to Spanish
         generated_tokens = model.generate(
             **model_inputs,
-            forced_bos_token_id=tokenizer.lang_code_to_id["es_XX"]
+            forced_bos_token_id=tokenizer.lang_code_to_id["es_XX"],
+            num_beams=4,
+            num_return_sequences=4
         )
 
-        sentence_es = tokenizer.batch_decode(generated_tokens, skip_special_tokens=True)
-        sentence_es_actual = y_test[i]
-        print(sentence_es[0])
-        print(sentence_es_actual)
+        print(generated_tokens)
+        
+        for j in range(len(generated_tokens)):
+            sentence_es = tokenizer.batch_decode(generated_tokens[j], skip_special_tokens=True)
+            sentence_es_actual = y_test[i]
+            print(sentence_es)
+            print(sentence_es_actual)
 
-        try:
-            evaluations.append(evaluate(sentence_en, sentence_es[0], sentence_es_actual))
-        except:
-            continue
+            try:
+                evaluations.append(evaluate(sentence_en, sentence_es, sentence_es_actual))
+            except:
+                continue
 
     plt.plot(evaluations)
     plt.ylabel('Evaluation')
