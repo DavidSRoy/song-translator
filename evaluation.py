@@ -11,8 +11,12 @@ def getNumSyllablesEN(sentence):
     lst = sentence.split(' ')
     total_ct = 0
     for word in lst:
-        pro_list = pro.phones_for_word(word)
-        total_ct += pro.syllable_count(pro_list[0])
+        try:
+            pro_list = pro.phones_for_word(word)
+            total_ct += pro.syllable_count(pro_list[0])
+        except:
+            print(word)
+            raise EOFError
     return total_ct
 
 

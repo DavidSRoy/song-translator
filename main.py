@@ -22,8 +22,8 @@ def main():
             y = data[i]['translation']['es']
 
             # not sure if necessary for test data
-            x = re.sub(r'[,\.;!:]', '', x)
-            y = re.sub(r'[,\.;!:]', '', y)
+            x = re.sub(r'[,\.;!:?]', '', x)
+            y = re.sub(r'[,\.;!:?]', '', y)
 
             for w in nltk.wordpunct_tokenize(x):
                 if w.isalpha() and w.lower() not in words:  # checks if alphanumeric string is in dictionary.
@@ -41,7 +41,9 @@ def main():
 
     evaluations = []
     for i, sentence_en in tqdm(enumerate(x_test)):
-        model_inputs = tokenizer(x, return_tensors="pt")
+        if i == 30:
+            break
+        model_inputs = tokenizer(sentence_en, return_tensors="pt")
 
         # # translate from English to Spanish
         generated_tokens = model.generate(
@@ -51,6 +53,9 @@ def main():
 
         sentence_es = tokenizer.batch_decode(generated_tokens, skip_special_tokens=True)
         sentence_es_actual = y_test[i]
+        print(sentence_es)
+        print(sentence_es_actual)
+
         try:
             evaluations.append(evaluate(sentence_en, sentence_es, sentence_es_actual))
         except:
