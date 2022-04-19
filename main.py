@@ -9,6 +9,7 @@ import re
 from evaluation import evaluate
 import matplotlib.pyplot as plt
 
+
 def main():
     words = set(nltk.corpus.words.words())  # Words in English Dictionary
     x_test = []
@@ -50,8 +51,10 @@ def main():
 
         sentence_es = tokenizer.batch_decode(generated_tokens, skip_special_tokens=True)
         sentence_es_actual = y_test[i]
-
-        evaluations.append(evaluate(sentence_en, sentence_es, sentence_es_actual))
+        try:
+            evaluations.append(evaluate(sentence_en, sentence_es, sentence_es_actual))
+        except:
+            continue
 
     plt.plot(evaluations)
     plt.ylabel('Evaluation')
