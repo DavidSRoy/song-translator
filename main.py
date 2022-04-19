@@ -1,35 +1,71 @@
-import torch
+# from torch.utils.data import TensorDataset, DataLoader
+from transformers import MBartForConditionalGeneration, MBart50TokenizerFast, PreTrainedTokenizerFast
+import json
+# import pickle
+from tqdm import tqdm
+import nltk
+nltk.download('words')
+import re
+from evaluation import evaluate
+import matplotlib.pyplot as plt
 
 
-from transformers import MBartForConditionalGeneration, MBartTokenizer
-from transformers import MBartForConditionalGeneration, MBart50TokenizerFast
+def main():
+    words = set(nltk.corpus.words.words())  # Words in English Dictionary
+    x_test = []
+    y_test = []
 
-model = MBartForConditionalGeneration.from_pretrained("facebook/mbart-large-50")
-tokenizer = MBart50TokenizerFast.from_pretrained("facebook/mbart-large-50-one-to-many-mmt", src_lang="en_XX", tgt_lang="es_XX")
+    with open('spanishval.json') as data_file:
+        data = json.load(data_file)
+        for i in range(0, len(data)):
+            skip = False
+            x = data[i]['translation']['en']
+            y = data[i]['translation']['es']
 
-src_text = " hello world how are you"
-tgt_text = "hola mundo como estas"
+            # not sure if necessary for test data
+            x = re.sub(r'[,\.;!:?]', '', x)
+            y = re.sub(r'[,\.;!:?]', '', y)
 
-force_words = ["hola"]
+            for w in nltk.wordpunct_tokenize(x):
+                if w.isalpha() and w.lower() not in words:  # checks if alphanumeric string is in dictionary.
+                    skip = True
+                    break
 
-model_inputs = tokenizer(src_text, return_tensors="pt")
-with tokenizer.as_target_tokenizer():
-    labels = tokenizer(tgt_text, return_tensors="pt").input_ids
+            if skip:
+                continue
 
-model(**model_inputs, labels=labels)  # forward pass
-tokenizer = MBartTokenizer.from_pretrained("facebook/mbart-large-50-one-to-many-mmt", src_lang="en_XX")
-article = "hola mundo como estas"
-inputs = tokenizer(article, return_tensors="pt")
-force_words_ids = tokenizer(force_words, add_special_tokens=False).input_ids
+            x_test.append(x)
+            y_test.append(y)
 
-translated_tokens = model.generate(
-    **inputs, decoder_start_token_id=tokenizer.lang_code_to_id["es_XX"],
-    num_beams=10,
-    force_words_ids=force_words_ids
-    )
-t = tokenizer.batch_decode(translated_tokens, skip_special_tokens=True)[0]
+    model = MBartForConditionalGeneration.from_pretrained("facebook/mbart-large-50-one-to-many-mmt")
+    tokenizer = MBart50TokenizerFast.from_pretrained("facebook/mbart-large-50-one-to-many-mmt", src_lang="en_XX")
 
-print(t)
+    evaluations = []
+    for i, sentence_en in tqdm(enumerate(x_test)):
+        if i == 30:
+            break
+        model_inputs = tokenizer(sentence_en, return_tensors="pt")
+
+        # # translate from English to Spanish
+        generated_tokens = model.generate(
+            **model_inputs,
+            forced_bos_token_id=tokenizer.lang_code_to_id["es_XX"]
+        )
+
+        sentence_es = tokenizer.batch_decode(generated_tokens, skip_special_tokens=True)
+        sentence_es_actual = y_test[i]
+        print(sentence_es[0])
+        print(sentence_es_actual)
+
+        try:
+            evaluations.append(evaluate(sentence_en, sentence_es[0], sentence_es_actual))
+        except:
+            continue
+
+    plt.plot(evaluations)
+    plt.ylabel('Evaluation')
+    plt.show()
 
 
-
+if __name__ == "__main__":
+    main()
