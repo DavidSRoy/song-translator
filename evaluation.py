@@ -6,11 +6,11 @@ SYLLABLE_WEIGHT = 0.6
 BLEU_WEIGHT = 0.4
 SYLLABLE_THRESHOLD = 10  # to be removed
 
-
 def getNumSyllablesEN(sentence):
     lst = sentence.split(' ')
     total_ct = 0
     for word in lst:
+
         # try:
         pro_list = pro.phones_for_word(word)
         total_ct += pro.syllable_count(pro_list[0])
@@ -44,3 +44,4 @@ def evaluate(sentence_en, sentence_es, sentence_es_actual):
 #     sentence_es_actual = input("Enter the actual Spanish translation")
 #     score = evaluate(sentence_en, sentence_es, sentence_es_actual)
 #     print(f'Score: {score}')
+
