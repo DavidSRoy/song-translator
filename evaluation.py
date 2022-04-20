@@ -23,13 +23,27 @@ def getNumSyllablesEN(sentence):
 def getNumSyllablesES(word):
     return len(syllabize(word)[0])
 
+def getNumSyllablesESSentence(sentence):
+    score = 0
+    for word in sentence:
+
+        score += len(syllabize(word)[0])
+    return score
+
 
 def getBleuScore(reference, candidate):
+    print("REF")
+    print(reference)
+    print(f'candidate = {candidate}')
     return sentence_bleu(reference, candidate)
 
 
+def getSyllableScore(sentence_en, sentence_es):
+    syllable_score = abs(getNumSyllablesEN(sentence_en) - getNumSyllablesESSentence(sentence_es))
+    return syllable_score
+
 def evaluate(sentence_en, sentence_es, sentence_es_actual):
-    syllable_score = getNumSyllablesEN(sentence_en) - getNumSyllablesES(sentence_es)
+    syllable_score = getSyllableScore(sentence_en, sentence_es)
     bleu_score = getBleuScore(sentence_es, sentence_es_actual)
 
     print(f' {sentence_es} + {sentence_es_actual}')
@@ -39,10 +53,13 @@ def evaluate(sentence_en, sentence_es, sentence_es_actual):
     return (-pow(syllable_score, 2) * SYLLABLE_WEIGHT + SYLLABLE_THRESHOLD) + bleu_score * BLEU_WEIGHT
 
 
-# while True:
-#     sentence_en = input("Enter an English sentence: ")
-#     sentence_es = input("Enter a candidate Spanish sentence: ")
-#     sentence_es_actual = input("Enter the actual Spanish translation")
-#     score = evaluate(sentence_en, sentence_es, sentence_es_actual)
-#     print(f'Score: {score}')
+
+if __name__ == "__main__":
+
+    while True:
+        sentence_en = input("Enter an English sentence: ")
+        sentence_es = input("Enter a candidate Spanish sentence: ")
+        sentence_es_actual = input("Enter the actual Spanish translation")
+        score = evaluate(sentence_en, sentence_es, sentence_es_actual)
+        print(f'Score: {score}')
 
