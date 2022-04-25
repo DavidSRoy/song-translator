@@ -26,7 +26,7 @@ def generate(sentence_en,model, tokenizer):
 
     print(generated_tokens)
     
-    best_candidate = ['best','candidate']
+    best_candidate = None
     best_candidate_score = float('inf')
 
         #sentences
@@ -122,39 +122,15 @@ def main():
     plt.show()
     plt.savefig('figure1.png')"""
 
-
-    # en = input("English: ")
-    # best = generate(en,model, tokenizer)
-    # print(f'best = {best}')
-    # s = ''
-    # sp = [s.join(best[i] + ' ') for i in range(len(best))]
-    # es = ''.join(sp)
-    # print(es)
-    # print()
-
-
-    en_lines = []
-    es_lines = []
-
-    with open('song_en.txt', 'rb') as f:
-        en_lines = f.readlines()
-        
-    print(en_lines)
-    for en in en_lines:
-        
-        en_s = str(en)
-        en_s = en_s[2:-3]
-        print(en_s)
-        best = generate(str(en_s),model, tokenizer)
+    while True:
+        en = input("English: ")
+        best = generate(en,model, tokenizer)
+        print(f'best = {best}')
         s = ''
         sp = [s.join(best[i] + ' ') for i in range(len(best))]
         es = ''.join(sp)
-        es_lines.append(es)
-
-    
-    for es in es_lines:
         print(es)
-        
+        print()
 
 
 

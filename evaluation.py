@@ -60,6 +60,8 @@ if __name__ == "__main__":
         sentence_en = input("Enter an English sentence: ")
         sentence_es = input("Enter a candidate Spanish sentence: ")
         sentence_es_actual = input("Enter the actual Spanish translation")
+        print(f"SYLLABLES ES = {getNumSyllablesES(sentence_es)}")
+        print(f"SYLLABLES ES ACTUAL = {getNumSyllablesES(sentence_es_actual)}")
         score = evaluate(sentence_en, sentence_es, sentence_es_actual)
         print(f'Score: {score}')
 
