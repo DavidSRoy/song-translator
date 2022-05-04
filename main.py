@@ -1,68 +1,75 @@
 # from torch.utils.data import TensorDataset, DataLoader
-from transformers import MBartForConditionalGeneration, MBart50TokenizerFast, PreTrainedTokenizerFast
+from save_utils import save_data
+from transformers import MBartForConditionalGeneration, MBart50TokenizerFast
 import json
-import pickle as pkl
 from tqdm import tqdm
 import nltk
-nltk.download('words')
 import re
 from evaluation import evaluate, getBleuScore, getSyllableScore
 import matplotlib.pyplot as plt
 
+nltk.download('words')
 
-syllable_scores = []
-bleu_scores = []
+NUM_TO_TRANSLATE = 5
+NUM_BEAMS = 4
+INPUT_LANG_CODE = "en_XX"
+OUTPUT_LANG_CODE = "es_XX"
+LOGS_ON = True
 
-def generate(sentence_en,model, tokenizer):
-    model_inputs = tokenizer(sentence_en, return_tensors="pt")
+
+def log(inp):
+    if LOGS_ON:
+        print(inp)
+
+
+def load_mbart_model_and_tokenizer():
+    model = MBartForConditionalGeneration.from_pretrained("facebook/mbart-large-50-one-to-many-mmt")
+    tokenizer = MBart50TokenizerFast.from_pretrained("facebook/mbart-large-50-one-to-many-mmt",
+                                                     src_lang=INPUT_LANG_CODE)
+    return model, tokenizer
+
+
+def load_model_and_tokenizer(model_type):
+    """
+    Returns the pretrained model and tokenizer specified
+    :param model_type: a string that specifies the model we want to load. Current supported models:
+    1) mbart
+    :return:
+    """
+    if model_type == "mbart":
+        return load_mbart_model_and_tokenizer()
+
+
+def generate(input_sentence):
+    model_inputs = tokenizer(input_sentence, return_tensors="pt")
 
     # # translate from English to Spanish
-    generated_tokens = model.generate(
+    output_ids = model.generate(
         **model_inputs,
-        forced_bos_token_id=tokenizer.lang_code_to_id["es_XX"],
-        num_beams=4,
-        num_return_sequences=4
+        forced_bos_token_id=tokenizer.lang_code_to_id[OUTPUT_LANG_CODE],
+        num_beams=NUM_BEAMS,
+        num_return_sequences=NUM_BEAMS
     )
-
-    print(generated_tokens)
     
-    best_candidate = ['best','candidate']
+    best_candidate = []
     best_candidate_score = float('inf')
-
-        #sentences
-
     try:
-        #iterate candidates
-        for j in range(len(generated_tokens)):
-            sentence_es = tokenizer.batch_decode(generated_tokens[j], skip_special_tokens=True)
-            
-            print(sentence_es)
-
-            #evaluations.append(evaluate(sentence_en, sentence_es, sentence_es_actual))
-            
-            print("HERE")
-            score = getSyllableScore(sentence_en, sentence_es)
-            print("SCORE = ")
-            print(score)
+        for j in range(len(output_ids)):
+            output_sentence = tokenizer.batch_decode(output_ids[j], skip_special_tokens=True)
+            score = getSyllableScore(input_sentence, output_sentence)
             if score < best_candidate_score:
                 best_candidate_score = score
-                best_candidate = sentence_es
-
-            print("HERE1")
-        print("HERE2")
-        syllable_scores.append(best_candidate_score)
-    except: 
-    
+                best_candidate = output_sentence
+    except (Exception,):
         print("EXCEPT")
 
-    return best_candidate
+    return best_candidate, best_candidate_score
 
-def main():
-    words = set(nltk.corpus.words.words())  # Words in English Dictionary
+
+def load_json_test_data(data_path, words):
     x_test = []
     y_test = []
-
-    with open('spanishval.json') as data_file:
+    with open(data_path) as data_file:
         data = json.load(data_file)
         for i in range(0, len(data)):
             skip = False
@@ -83,79 +90,79 @@ def main():
 
             x_test.append(x)
             y_test.append(y)
+    log("x_test length "+str(len(x_test)))
+    log("y_test length " + str(len(y_test)))
+    return x_test, y_test
 
-    model = MBartForConditionalGeneration.from_pretrained("facebook/mbart-large-50-one-to-many-mmt")
-    tokenizer = MBart50TokenizerFast.from_pretrained("facebook/mbart-large-50-one-to-many-mmt", src_lang="en_XX")
 
-
-
-    for i, sentence_en in tqdm(enumerate(x_test)):
-        if i == 0:
+def translate_and_evaluate(x, y):
+    bleu_scores = []
+    syllable_scores = []
+    for i, original_sentence in tqdm(enumerate(x)):
+        if i == NUM_TO_TRANSLATE:
             break
-        best_candidate = generate(sentence_en, model, tokenizer)
-
-
-
-
+        human_translation = y[i]
+        best_candidate, best_candidate_score = generate(original_sentence)
         s = ''
         sp = [s.join(best_candidate[i] + ' ') for i in range(len(best_candidate))]
-        bleu_score = getBleuScore(sentence_es_actual, ''.join(sp))
+        bleu_score = getBleuScore(human_translation, ''.join(sp))
+        syllable_scores.append(best_candidate_score)
         bleu_scores.append(bleu_score)
-
 
         print(f'Syllable Score: {best_candidate_score}')
         print(f'Bleu Score: {bleu_score}')
         print(f'Syllable Scores: {syllable_scores}')
         print(f'Bleu Scores: {bleu_scores}')
 
-    """
-    with open('syllable_scores.data', 'wb') as f:
-        pkl.dump(syllable_scores, f)
-
-    with open('bleu_scores.data', 'wb') as f:
-        pkl.dump(bleu_scores, f)
+    save_data("syllable_scores", syllable_scores)
+    save_data("bleu_scores", bleu_scores)
 
     plt.scatter(syllable_scores, bleu_scores)
     plt.xlabel('Syllable Difference')
     plt.ylabel('Bleu Score')
     plt.title("Syllable Difference vs Bleu Score")
     plt.show()
-    plt.savefig('figure1.png')"""
+    plt.savefig('figure1.png')
 
 
-    # en = input("English: ")
-    # best = generate(en,model, tokenizer)
-    # print(f'best = {best}')
-    # s = ''
-    # sp = [s.join(best[i] + ' ') for i in range(len(best))]
-    # es = ''.join(sp)
-    # print(es)
-    # print()
+def translate_EMNLP_data(words):
+    x_test, y_test = load_json_test_data("spanishval.json", words)
+    translate_and_evaluate(
+        x=x_test,
+        y=y_test
+    )
 
 
+def translate_parallel_text_data(original_text_path):
     en_lines = []
     es_lines = []
 
-    with open('song_en.txt', 'rb') as f:
+    with open(original_text_path, 'rb') as f:
         en_lines = f.readlines()
-        
+
     print(en_lines)
     for en in en_lines:
-        
         en_s = str(en)
         en_s = en_s[2:-3]
         print(en_s)
-        best = generate(str(en_s),model, tokenizer)
+        best = generate(str(en_s))
         s = ''
         sp = [s.join(best[i] + ' ') for i in range(len(best))]
         es = ''.join(sp)
         es_lines.append(es)
 
-    
     for es in es_lines:
         print(es)
-        
 
+
+# load model and tokenizer in outermost scope
+model, tokenizer = load_model_and_tokenizer("mbart")
+
+
+def main():
+    words = set(nltk.corpus.words.words())  # Words in English Dictionary
+    translate_EMNLP_data(words)
+    # translate_parallel_text_data('song_en.txt')
 
 
 if __name__ == "__main__":

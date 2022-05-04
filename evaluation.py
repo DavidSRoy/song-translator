@@ -6,6 +6,7 @@ SYLLABLE_WEIGHT = 0.6
 BLEU_WEIGHT = 0.4
 SYLLABLE_THRESHOLD = 10  # to be removed
 
+
 def getNumSyllablesEN(sentence):
     lst = sentence.split(' ')
     total_ct = 0
@@ -23,6 +24,7 @@ def getNumSyllablesEN(sentence):
 def getNumSyllablesES(word):
     return len(syllabize(word)[0])
 
+
 def getNumSyllablesESSentence(sentence):
     score = 0
     for word in sentence:
@@ -32,15 +34,14 @@ def getNumSyllablesESSentence(sentence):
 
 
 def getBleuScore(reference, candidate):
-    print("REF")
     print(reference)
-    print(f'candidate = {candidate}')
     return sentence_bleu(reference, candidate)
 
 
 def getSyllableScore(sentence_en, sentence_es):
     syllable_score = abs(getNumSyllablesEN(sentence_en) - getNumSyllablesESSentence(sentence_es))
     return syllable_score
+
 
 def evaluate(sentence_en, sentence_es, sentence_es_actual):
     syllable_score = getSyllableScore(sentence_en, sentence_es)
@@ -51,7 +52,6 @@ def evaluate(sentence_en, sentence_es, sentence_es_actual):
     print(f'Bleu Score: {bleu_score}')
 
     return (-pow(syllable_score, 2) * SYLLABLE_WEIGHT + SYLLABLE_THRESHOLD) + bleu_score * BLEU_WEIGHT
-
 
 
 if __name__ == "__main__":
