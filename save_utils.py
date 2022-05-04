@@ -72,10 +72,14 @@ def move_last_run_to_archive(data_name):
 
 def save_data(data_name, data):
     """
-
+    Saves a piece of data in a pickle file in the ./save directory. The data_name should be a
+    unique identifier for the piece of data to be saved. The file will be saved in ./save/data_name/recent/data_name-x.pkl
+    where x is the version number of the file. The most recent save of this data will reside in the recent directory and
+    all older saves will be in ./save/data_name/archive. x increments by 1 every time the data is saved. The x is stored in
+    ./save/data_name/version.txt. Manually editing this file will cause the function to break.
     :param data_name: unique identifier in the file system for the type of data being archived (e.g. "bleu_scores")
-    :param data:
-    :return:
+    :param data: the variable data to save in the file
+    :return: void
     """
     full_path = ROOT_PATH + data_name + "/"
     recent_path = get_recent_path(data_name)
@@ -91,12 +95,18 @@ def save_data(data_name, data):
     increment_version_number(data_name)
 
 
-def load_kth_file(data_name, k):
+def load_version_number(data_name, version_number):
+    """
+    Loads the file with version number version_number
+    :param data_name: the uq identifier for the data that is to be loaded
+    :param version_number: the version of the data that is to be loaded.
+    :return: the data stored in the requested file. Raises exception if invalid broken number.
+    """
     current_version_num = get_version_number(data_name)
-    if k >= current_version_num:
+    if version_number >= current_version_num:
         raise Exception("version doesn't exist")
-    file_name = get_data_file_name(data_name, k)
-    if k == current_version_num-1:
+    file_name = get_data_file_name(data_name, version_number)
+    if version_number == current_version_num-1:
         recent_path = get_recent_path(data_name)
         data_path = recent_path + file_name
     else:
@@ -108,8 +118,13 @@ def load_kth_file(data_name, k):
 
 
 def load_most_recent_file(data_name):
+    """
+    Loads the most recent file for data_name.
+    :param data_name: the uq identifier for the data that is to be loaded
+    :return: the data stored in the requested file.
+    """
     recent_version_num = get_version_number(data_name) - 1
-    return load_kth_file(data_name, recent_version_num)
+    return load_version_number(data_name, recent_version_num)
 
 
 if __name__ == "__main__":
