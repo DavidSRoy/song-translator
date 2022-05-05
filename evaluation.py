@@ -11,7 +11,6 @@ def getNumSyllablesEN(sentence):
     lst = sentence.split(' ')
     total_ct = 0
     for word in lst:
-
         # try:
         pro_list = pro.phones_for_word(word)
         total_ct += pro.syllable_count(pro_list[0])
@@ -38,7 +37,7 @@ def getBleuScore(reference, candidate):
     return sentence_bleu(reference, candidate)
 
 
-def getSyllableScore(sentence_en, sentence_es):
+def getSyllableScore(sentence_es, sentence_en):
     syllable_score = abs(getNumSyllablesEN(sentence_en) - getNumSyllablesESSentence(sentence_es))
     return syllable_score
 

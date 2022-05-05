@@ -12,8 +12,8 @@ nltk.download('words')
 
 NUM_TO_TRANSLATE = 5
 NUM_BEAMS = 4
-INPUT_LANG_CODE = "en_XX"
-OUTPUT_LANG_CODE = "es_XX"
+INPUT_LANG_CODE = "es_XX"
+OUTPUT_LANG_CODE = "en_XX"
 LOGS_ON = True
 
 
@@ -29,6 +29,13 @@ def load_mbart_model_and_tokenizer():
     return model, tokenizer
 
 
+def load_fine_tuned_model():
+    tokenizer = MBart50TokenizerFast.from_pretrained("TuhinColumbia/spanishpoetrymany")
+    model = MBartForConditionalGeneration.from_pretrained("TuhinColumbia/spanishpoetrymany")
+    tokenizer.src_lang = "es_XX"
+    return model, tokenizer
+
+
 def load_model_and_tokenizer(model_type):
     """
     Returns the pretrained model and tokenizer specified
@@ -38,6 +45,8 @@ def load_model_and_tokenizer(model_type):
     """
     if model_type == "mbart":
         return load_mbart_model_and_tokenizer()
+    elif model_type == "fine_tuned":
+        return load_fine_tuned_model()
 
 
 def generate(input_sentence):
@@ -54,8 +63,11 @@ def generate(input_sentence):
     best_candidate = []
     best_candidate_score = float('inf')
     try:
+        log("INPUT SENTENCE: "+input_sentence)
+        log("--------------------")
         for j in range(len(output_ids)):
             output_sentence = tokenizer.batch_decode(output_ids[j], skip_special_tokens=True)
+            log(output_sentence)
             score = getSyllableScore(input_sentence, output_sentence)
             if score < best_candidate_score:
                 best_candidate_score = score
@@ -73,8 +85,8 @@ def load_json_test_data(data_path, words):
         data = json.load(data_file)
         for i in range(0, len(data)):
             skip = False
-            x = data[i]['translation']['en']
-            y = data[i]['translation']['es']
+            x = data[i]['translation']['es']
+            y = data[i]['translation']['en']
 
             # not sure if necessary for test data
             x = re.sub(r'[,\.;!:?]', '', x)
@@ -103,9 +115,10 @@ def translate_and_evaluate(x, y):
             break
         human_translation = y[i]
         best_candidate, best_candidate_score = generate(original_sentence)
+        log(best_candidate)
         s = ''
-        sp = [s.join(best_candidate[i] + ' ') for i in range(len(best_candidate))]
-        bleu_score = getBleuScore(human_translation, ''.join(sp))
+        translated_string = [s.join(best_candidate[i] + ' ') for i in range(len(best_candidate))]
+        bleu_score = getBleuScore(human_translation, ''.join(translated_string))
         syllable_scores.append(best_candidate_score)
         bleu_scores.append(bleu_score)
 
@@ -156,7 +169,7 @@ def translate_parallel_text_data(original_text_path):
 
 
 # load model and tokenizer in outermost scope
-model, tokenizer = load_model_and_tokenizer("mbart")
+model, tokenizer = load_model_and_tokenizer("fine_tuned")
 
 
 def main():
