@@ -8,8 +8,6 @@ import re
 from evaluation import evaluate, getBleuScore, getSyllableScore
 import matplotlib.pyplot as plt
 
-nltk.download('words')
-
 NUM_TO_TRANSLATE = 5
 NUM_BEAMS = 4
 INPUT_LANG_CODE = "en_XX"
@@ -66,33 +64,52 @@ def generate(input_sentence):
     return best_candidate, best_candidate_score
 
 
-def load_json_test_data(data_path, words):
+def load_json_test_data(data_path):
     x_test = []
     y_test = []
     with open(data_path) as data_file:
         data = json.load(data_file)
         for i in range(0, len(data)):
-            skip = False
-            x = data[i]['translation']['en']
-            y = data[i]['translation']['es']
+            x = data[i]['translation']['es']
+            y = data[i]['translation']['en']
 
             # not sure if necessary for test data
-            x = re.sub(r'[,\.;!:?]', '', x)
-            y = re.sub(r'[,\.;!:?]', '', y)
-
-            for w in nltk.wordpunct_tokenize(x):
-                if w.isalpha() and w.lower() not in words:  # checks if alphanumeric string is in dictionary.
-                    skip = True
-                    break
-
-            if skip:
-                continue
+            x = re.sub(r'[,\.;!:?¿]', '', x)
+            y = re.sub(r'[,\.;!:?¿]', '', y)
 
             x_test.append(x)
             y_test.append(y)
     log("x_test length "+str(len(x_test)))
     log("y_test length " + str(len(y_test)))
     return x_test, y_test
+
+
+def load_test_data(data_path_x, data_path_y):
+    x_test = []
+    y_test = []
+    with open(data_path_x) as data_file_x, open(data_path_y) as data_file_y:
+        data_x = data_file_x.read()
+        data_x = data_x.split("--------------------------------------------------------------------------------")
+        data_y = data_file_y.read()
+        data_y = data_y.split("--------------------------------------------------------------------------------")
+
+        for i in range(0, len(data_x)):
+            x = data_x[i]
+            y = data_y[i]
+
+            x = re.sub(r'[,\.;!:?¿]', '', x)
+            y = re.sub(r'[,\.;!:?¿]', '', y)
+
+            # for w in nltk.wordpunct_tokenize(x):
+            #     if w.isalpha() and w.lower() not in words:  # checks if alphanumeric string is in dictionary.
+            #         skip = True
+            #         break
+
+            x_test.append(x)
+            y_test.append(y)
+            log("x_test length "+str(len(x_test)))
+            log("y_test length " + str(len(y_test)))
+        return x_test, y_test
 
 
 def translate_and_evaluate(x, y):
@@ -125,8 +142,8 @@ def translate_and_evaluate(x, y):
     plt.savefig('figure1.png')
 
 
-def translate_EMNLP_data(words):
-    x_test, y_test = load_json_test_data("spanishval.json", words)
+def translate_EMNLP_data():
+    x_test, y_test = load_test_data("data/testspanish.txt", "data/testspanishgold.txt")
     translate_and_evaluate(
         x=x_test,
         y=y_test
@@ -160,8 +177,7 @@ model, tokenizer = load_model_and_tokenizer("mbart")
 
 
 def main():
-    words = set(nltk.corpus.words.words())  # Words in English Dictionary
-    translate_EMNLP_data(words)
+    translate_EMNLP_data()
     # translate_parallel_text_data('song_en.txt')
 
 
