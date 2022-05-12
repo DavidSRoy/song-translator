@@ -8,19 +8,18 @@ SYLLABLE_THRESHOLD = 10  # to be removed
 
 
 def getNumSyllablesEN(sentence):
-    # print(type(sentence))
-    # print(sentence)
     lst = sentence.split(' ')
-    print(lst)
     total_ct = 0
     for word in lst:
-        pro_list = pro.phones_for_word(word)
-        total_ct += pro.syllable_count(pro_list[0])
-        print("succ")
+        try:
+            pro_list = pro.phones_for_word(word)
+            total_ct += pro.syllable_count(pro_list[0])
+        except:
+            continue
 
     return total_ct
 
-
+    # mo ur n -> mourn
 def getNumSyllablesES(word):
     return len(syllabize(word)[0])
 
@@ -34,7 +33,7 @@ def getNumSyllablesESSentence(sentence):
 
 def getBleuScore(reference, candidate):
     print(reference)
-    return sentence_bleu(reference, candidate)
+    return sentence_bleu([reference], candidate)
 
 
 def getSyllableScore(sentence_es, sentence_en):
