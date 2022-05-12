@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 
 nltk.download('words')
 
-NUM_TO_TRANSLATE = 5
+NUM_TO_TRANSLATE = 30
 NUM_BEAMS = 4
 INPUT_LANG_CODE = "en_XX"
 OUTPUT_LANG_CODE = "es_XX"
@@ -23,9 +23,11 @@ def log(inp):
 
 
 def load_mbart_model_and_tokenizer():
-    model = MBartForConditionalGeneration.from_pretrained("facebook/mbart-large-50-one-to-many-mmt")
-    tokenizer = MBart50TokenizerFast.from_pretrained("facebook/mbart-large-50-one-to-many-mmt",
-                                                     src_lang=INPUT_LANG_CODE)
+    tokenizer = MBart50TokenizerFast.from_pretrained("TuhinColumbia/spanishpoetrymany",src_lang=INPUT_LANG_CODE)
+    model = MBartForConditionalGeneration.from_pretrained("TuhinColumbia/spanishpoetrymany")
+    # model = MBartForConditionalGeneration.from_pretrained("facebook/mbart-large-50-one-to-many-mmt")
+    # tokenizer = MBart50TokenizerFast.from_pretrained("facebook/mbart-large-50-one-to-many-mmt",
+    #                                                  src_lang=INPUT_LANG_CODE)
     return model, tokenizer
 
 
@@ -46,9 +48,9 @@ def generate(input_sentence):
     # # translate from English to Spanish
     output_ids = model.generate(
         **model_inputs,
-        forced_bos_token_id=tokenizer.lang_code_to_id[OUTPUT_LANG_CODE],
-        num_beams=NUM_BEAMS,
-        num_return_sequences=NUM_BEAMS
+        forced_bos_token_id=tokenizer.lang_code_to_id[OUTPUT_LANG_CODE]
+        # num_beams=NUM_BEAMS,
+        # num_return_sequences=NUM_BEAMS
     )
     
     best_candidate = []
@@ -57,6 +59,10 @@ def generate(input_sentence):
         for j in range(len(output_ids)):
             output_sentence = tokenizer.batch_decode(output_ids[j], skip_special_tokens=True)
             score = getSyllableScore(input_sentence, output_sentence)
+
+            processed = process_candidate(output_sentence)
+            print(f"Candidate: {processed}")
+
             if score < best_candidate_score:
                 best_candidate_score = score
                 best_candidate = output_sentence
@@ -94,6 +100,11 @@ def load_json_test_data(data_path, words):
     log("y_test length " + str(len(y_test)))
     return x_test, y_test
 
+def process_candidate(c):
+    s = ''
+    sp = [s.join(c[i] + ' ') for i in range(len(c))]
+    processed = ''.join(sp)
+    return processed
 
 def translate_and_evaluate(x, y):
     bleu_scores = []
@@ -146,9 +157,7 @@ def translate_parallel_text_data(original_text_path):
         en_s = en_s[2:-3]
         print(en_s)
         best = generate(str(en_s))
-        s = ''
-        sp = [s.join(best[i] + ' ') for i in range(len(best))]
-        es = ''.join(sp)
+        es = process_candidate(best)
         es_lines.append(es)
 
     for es in es_lines:
@@ -167,3 +176,13 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+    # while True:
+    #     en = input("EN: ")
+    #     best = generate(en)[0]
+
+    #     es = process_candidate(best)
+    #     print(f'ES: {es}')
+    #     print()
+
+

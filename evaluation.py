@@ -35,7 +35,7 @@ def getNumSyllablesESSentence(sentence):
 
 def getBleuScore(reference, candidate):
     print(reference)
-    return sentence_bleu(reference, candidate)
+    return sentence_bleu([reference], candidate)
 
 
 def getSyllableScore(sentence_en, sentence_es):
