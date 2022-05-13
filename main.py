@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 
 nltk.download('words')
 
-NUM_TO_TRANSLATE = 5
+NUM_TO_TRANSLATE = 30
 NUM_BEAMS = 4
 INPUT_LANG_CODE = "es_XX"
 OUTPUT_LANG_CODE = "en_XX"
@@ -23,8 +23,8 @@ def log(inp):
 
 
 def load_mbart_model_and_tokenizer():
-    model = MBartForConditionalGeneration.from_pretrained("facebook/mbart-large-50-one-to-many-mmt")
-    tokenizer = MBart50TokenizerFast.from_pretrained("facebook/mbart-large-50-one-to-many-mmt",
+    model = MBartForConditionalGeneration.from_pretrained("facebook/mbart-large-50-many-to-many-mmt")
+    tokenizer = MBart50TokenizerFast.from_pretrained("facebook/mbart-large-50-many-to-many-mmt",
                                                      src_lang=INPUT_LANG_CODE)
     return model, tokenizer
 
@@ -57,7 +57,9 @@ def generate(input_sentence):
         **model_inputs,
         forced_bos_token_id=tokenizer.lang_code_to_id[OUTPUT_LANG_CODE],
         num_beams=NUM_BEAMS,
-        num_return_sequences=NUM_BEAMS
+        num_beam_groups=NUM_BEAMS/2,
+        num_return_sequences=NUM_BEAMS,
+        diversity_penalty=0.6
     )
     
     best_candidate = []
@@ -67,8 +69,11 @@ def generate(input_sentence):
         log("--------------------")
         for j in range(len(output_ids)):
             output_sentence = tokenizer.batch_decode(output_ids[j], skip_special_tokens=True)
-            log(output_sentence)
-            score = getSyllableScore(input_sentence, output_sentence)
+            print("OUTPUT SENTENCE ", str(output_sentence))
+            output_joined = " ".join(output_sentence)
+            output_joined = output_joined.strip()
+            print(output_joined)
+            score = getSyllableScore(input_sentence, output_joined)
             if score < best_candidate_score:
                 best_candidate_score = score
                 best_candidate = output_sentence
@@ -78,7 +83,7 @@ def generate(input_sentence):
     return best_candidate, best_candidate_score
 
 
-def load_json_test_data(data_path, words):
+def load_json_test_data(data_path):
     x_test = []
     y_test = []
     with open(data_path) as data_file:
@@ -91,14 +96,6 @@ def load_json_test_data(data_path, words):
             # not sure if necessary for test data
             x = re.sub(r'[,\.;!:?]', '', x)
             y = re.sub(r'[,\.;!:?]', '', y)
-
-            for w in nltk.wordpunct_tokenize(x):
-                if w.isalpha() and w.lower() not in words:  # checks if alphanumeric string is in dictionary.
-                    skip = True
-                    break
-
-            if skip:
-                continue
 
             x_test.append(x)
             y_test.append(y)
@@ -138,8 +135,8 @@ def translate_and_evaluate(x, y):
     plt.savefig('figure1.png')
 
 
-def translate_EMNLP_data(words):
-    x_test, y_test = load_json_test_data("spanishval.json", words)
+def translate_EMNLP_data():
+    x_test, y_test = load_json_test_data("spanishval.json")
     translate_and_evaluate(
         x=x_test,
         y=y_test
@@ -173,8 +170,7 @@ model, tokenizer = load_model_and_tokenizer("fine_tuned")
 
 
 def main():
-    words = set(nltk.corpus.words.words())  # Words in English Dictionary
-    translate_EMNLP_data(words)
+    translate_EMNLP_data()
     # translate_parallel_text_data('song_en.txt')
 
 
