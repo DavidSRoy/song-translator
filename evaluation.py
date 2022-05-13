@@ -1,6 +1,6 @@
 import pronouncing as pro
 from syltippy import syllabize
-from nltk.translate.bleu_score import sentence_bleu
+from nltk.translate.bleu_score import sentence_bleu, corpus_bleu
 
 SYLLABLE_WEIGHT = 0.6
 BLEU_WEIGHT = 0.4
@@ -19,7 +19,6 @@ def getNumSyllablesEN(sentence):
 
     return total_ct
 
-    # mo ur n -> mourn
 def getNumSyllablesES(word):
     return len(syllabize(word)[0])
 

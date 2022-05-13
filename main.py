@@ -8,8 +8,8 @@ import re
 from evaluation import evaluate, getBleuScore, getSyllableScore
 import matplotlib.pyplot as plt
 
-NUM_TO_TRANSLATE = 22
-NUM_BEAMS = 4
+NUM_TO_TRANSLATE = 30
+NUM_BEAMS = 16
 INPUT_LANG_CODE = "es_XX"
 OUTPUT_LANG_CODE = "en_XX"
 LOGS_ON = True
@@ -47,8 +47,8 @@ def generate(input_sentence):
         forced_bos_token_id=tokenizer.lang_code_to_id[OUTPUT_LANG_CODE],
         num_beams=NUM_BEAMS,
         num_return_sequences=NUM_BEAMS,
-        # num_beam_groups=NUM_BEAMS,
-        # diversity_penalty=0.8
+        num_beam_groups=NUM_BEAMS,
+        diversity_penalty=0.5
     )
     
     best_candidate = []
@@ -57,10 +57,10 @@ def generate(input_sentence):
     for j in range(len(output_ids)):
         output_sentence = tokenizer.batch_decode(output_ids[j], skip_special_tokens=True)
         # print("works")
-        print(input_sentence)
+        # print(input_sentence)
         output_sentence = ' '.join(output_sentence)
         output_sentence = output_sentence.strip()
-        print(output_sentence)
+        # print(output_sentence)
         # print("works2")
         score = getSyllableScore(input_sentence, output_sentence)
         # print("works3")
@@ -155,7 +155,7 @@ def translate_and_evaluate(x, y):
 
 
 def translate_EMNLP_data():
-    x_test, y_test = load_test_data("data/testspanish.txt", "data/testspanishgold.txt")
+    x_test, y_test = load_json_test_data('data/spanishval.json') # load_test_data("data/testspanish.txt", "data/testspanishgold.txt")
     translate_and_evaluate(
         x=x_test,
         y=y_test
