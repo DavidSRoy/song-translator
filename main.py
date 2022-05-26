@@ -5,13 +5,13 @@ import json
 from tqdm import tqdm
 import nltk
 import re
-from evaluation import evaluate, getBleuScore, getSyllableScore
+from evaluation import getBleuScore, getSyllableScore
 import matplotlib.pyplot as plt
 
 nltk.download('words')
 
 NUM_TO_TRANSLATE = 30
-NUM_BEAMS = 16
+NUM_BEAMS = 4
 INPUT_LANG_CODE = "es_XX"
 OUTPUT_LANG_CODE = "en_XX"
 LOGS_ON = True
@@ -65,12 +65,11 @@ def generate(input_sentence):
     best_candidate = []
     best_candidate_score = float('inf')
     try:
-        log("INPUT SENTENCE: "+input_sentence)
-        log("--------------------")
+        log("------------------------------")
+        log("Iinput Sentence: "+input_sentence)
         output_sentences = tokenizer.batch_decode(output_ids, skip_special_tokens=True)
 
-        for j in range(len(output_ids)):
-            print("OUTPUT SENTENCE ", str(output_sentences[j]))
+        for j in tqdm(range(len(output_ids))):
             output_joined = output_sentences[j]
             output_joined = output_joined.strip()
             score = getSyllableScore(input_sentence, strip_punct(output_joined))
@@ -79,7 +78,9 @@ def generate(input_sentence):
                 best_candidate = output_joined
     except (Exception,):
         print("EXCEPT")
-
+    log("Best Candidate: " + best_candidate)
+    log("Best Candidate Syll Score: " + str(best_candidate_score))
+    log("------------------------------")
     return best_candidate, best_candidate_score
 
 
@@ -108,6 +109,36 @@ def load_json_test_data(data_path):
     return x_test, y_test
 
 
+def load_test_data(data_path_x, data_path_y):
+    '''
+    :param data_path_x: 23 Spanish Poems
+    :param data_path_y: 23 Gold Standard English Translations
+    :return: Lists of Spanish and English Poems with punctuation removed.
+    '''
+    x_test = []
+    y_test = []
+    with open(data_path_x) as data_file_x, open(data_path_y) as data_file_y:
+        data_x = data_file_x.read()
+        # data_x.strip('\n')
+        data_x = data_x.split("--------------------------------------------------------------------------------")
+        data_y = data_file_y.read()
+        # data_y.strip('\n')
+        data_y = data_y.split("--------------------------------------------------------------------------------")
+
+        for i in range(0, len(data_x)):
+            x = ' '.join(data_x[i].splitlines())
+            y = ' '.join(data_y[i].splitlines())
+
+            x = re.sub(r'[,\.;!:?¿]', '', x)
+            y = re.sub(r'[,\.;!:?¿]', '', y)
+
+            x_test.append(x)
+            y_test.append(y)
+            # log("x_test length "+str(len(x_test)))
+            # log("y_test length " + str(len(y_test)))
+        return x_test, y_test
+
+
 def translate_and_evaluate(x, y):
     bleu_scores = []
     syllable_scores = []
@@ -116,15 +147,13 @@ def translate_and_evaluate(x, y):
             break
         human_translation = y[i]
         best_candidate, best_candidate_score = generate(original_sentence)
-        log(best_candidate)
         bleu_score = getBleuScore(human_translation, best_candidate)
         syllable_scores.append(best_candidate_score)
         bleu_scores.append(bleu_score)
 
-        print(f'Syllable Score: {best_candidate_score}')
-        print(f'Bleu Score: {bleu_score}')
-        print(f'Syllable Scores: {syllable_scores}')
-        print(f'Bleu Scores: {bleu_scores}')
+        log(f'Bleu Score: {bleu_score}')
+        log(f'Syllable Scores: {syllable_scores}')
+        log(f'Bleu Scores: {bleu_scores}')
 
     save_data("syllable_scores", syllable_scores)
     save_data("bleu_scores", bleu_scores)
@@ -138,33 +167,19 @@ def translate_and_evaluate(x, y):
 
 
 def translate_EMNLP_data():
-    x_test, y_test = load_json_test_data("spanishval.json")
+    x_test, y_test = load_json_test_data("data/spanishval.json")
     translate_and_evaluate(
         x=x_test,
         y=y_test
     )
 
 
-def translate_parallel_text_data(original_text_path):
-    en_lines = []
-    es_lines = []
-
-    with open(original_text_path, 'rb') as f:
-        en_lines = f.readlines()
-
-    print(en_lines)
-    for en in en_lines:
-        en_s = str(en)
-        en_s = en_s[2:-3]
-        print(en_s)
-        best = generate(str(en_s))
-        s = ''
-        sp = [s.join(best[i] + ' ') for i in range(len(best))]
-        es = ''.join(sp)
-        es_lines.append(es)
-
-    for es in es_lines:
-        print(es)
+def translate_poem_data():
+    x_test, y_test = load_test_data("data/testspanish.txt", "data/testspanishgold.txt")
+    translate_and_evaluate(
+        x=x_test,
+        y=y_test
+    )
 
 
 # load model and tokenizer in outermost scope
@@ -172,7 +187,7 @@ model, tokenizer = load_model_and_tokenizer("fine_tuned")
 
 
 def main():
-    translate_EMNLP_data()
+    translate_poem_data()
     # translate_parallel_text_data('song_en.txt')
 
 

@@ -57,15 +57,12 @@ def getNumSyllablesESSentence(sentence):
 
 
 def getBleuScore(reference, candidate):
-    print(reference)
     return sentence_bleu([reference], candidate)
 
 
 def getSyllableScore(sentence_es, sentence_en):
     english_syll_count = getNumSyllablesEN(sentence_en)
     spanish_syll_count = getNumSyllablesESSentence(sentence_es)
-    print("English syllable score: "+str(english_syll_count))
-    print("Spanish syllable score: "+str(spanish_syll_count))
     syllable_score = abs(english_syll_count - spanish_syll_count)
     return syllable_score
 
@@ -73,11 +70,6 @@ def getSyllableScore(sentence_es, sentence_en):
 def evaluate(sentence_en, sentence_es, sentence_es_actual):
     syllable_score = getSyllableScore(sentence_en, sentence_es)
     bleu_score = getBleuScore(sentence_es, sentence_es_actual)
-
-    print(f' {sentence_es} + {sentence_es_actual}')
-    print(f'Syllable Score: {syllable_score}')
-    print(f'Bleu Score: {bleu_score}')
-
     return (-pow(syllable_score, 2) * SYLLABLE_WEIGHT + SYLLABLE_THRESHOLD) + bleu_score * BLEU_WEIGHT
 
 
