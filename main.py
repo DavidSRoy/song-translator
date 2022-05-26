@@ -67,17 +67,16 @@ def generate(input_sentence):
     try:
         log("INPUT SENTENCE: "+input_sentence)
         log("--------------------")
-        output_sentence = tokenizer.batch_decode(output_ids, skip_special_tokens=True)
+        output_sentences = tokenizer.batch_decode(output_ids, skip_special_tokens=True)
 
         for j in range(len(output_ids)):
-            print("OUTPUT SENTENCE ", str(output_sentence[j]))
-            output_joined = output_sentence[j]
+            print("OUTPUT SENTENCE ", str(output_sentences[j]))
+            output_joined = output_sentences[j]
             output_joined = output_joined.strip()
-            print(output_joined)
             score = getSyllableScore(input_sentence, strip_punct(output_joined))
             if score < best_candidate_score:
                 best_candidate_score = score
-                best_candidate = output_sentence
+                best_candidate = output_joined
     except (Exception,):
         print("EXCEPT")
 
@@ -118,9 +117,7 @@ def translate_and_evaluate(x, y):
         human_translation = y[i]
         best_candidate, best_candidate_score = generate(original_sentence)
         log(best_candidate)
-        s = ''
-        translated_string = [s.join(best_candidate[i] + ' ') for i in range(len(best_candidate))]
-        bleu_score = getBleuScore(human_translation, ''.join(translated_string))
+        bleu_score = getBleuScore(human_translation, best_candidate)
         syllable_scores.append(best_candidate_score)
         bleu_scores.append(bleu_score)
 
