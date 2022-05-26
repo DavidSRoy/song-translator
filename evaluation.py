@@ -10,13 +10,36 @@ SYLLABLE_THRESHOLD = 10  # to be removed
 def getNumSyllablesEN(sentence):
     lst = sentence.split(' ')
     total_ct = 0
+    truncated_word = ""
+    last_word = ""
     for word in lst:
         try:
-            pro_list = pro.phones_for_word(word)
-            total_ct += pro.syllable_count(pro_list[0])
+            if truncated_word == "":
+                pro_list = pro.phones_for_word(word)
+                total_ct += pro.syllable_count(pro_list[0])
+                last_word = word
+            else:
+                attempt_suffix = truncated_word + word
+                try:
+                    pro_list = pro.phones_for_word(attempt_suffix)
+                    syll_count = pro.syllable_count(pro_list[0])
+                    total_ct += syll_count
+                    last_word = truncated_word
+                    truncated_word = ""
+                except:
+                    attempt_suffix = last_word + attempt_suffix
+                    try:
+                        pro_list = pro.phones_for_word(attempt_suffix)
+                        syll_count = pro.syllable_count(pro_list[0])
+                        total_ct -= pro.syllable_count(pro.pronunciations(last_word))
+                        total_ct += syll_count
+                        print(attempt_suffix)
+                        last_word = attempt_suffix
+                        truncated_word = ""
+                    except:
+                        truncated_word = truncated_word + word
         except:
-            total_ct = 1
-            print(word)
+            truncated_word = word
 
     return total_ct
 
@@ -27,8 +50,8 @@ def getNumSyllablesES(word):
 
 def getNumSyllablesESSentence(sentence):
     score = 0
+    sentence = sentence.split(" ")
     for word in sentence:
-
         score += len(syllabize(word)[0])
     return score
 
@@ -39,7 +62,11 @@ def getBleuScore(reference, candidate):
 
 
 def getSyllableScore(sentence_es, sentence_en):
-    syllable_score = abs(getNumSyllablesEN(sentence_en) - getNumSyllablesESSentence(sentence_es))
+    english_syll_count = getNumSyllablesEN(sentence_en)
+    spanish_syll_count = getNumSyllablesESSentence(sentence_es)
+    print("English syllable score: "+str(english_syll_count))
+    print("Spanish syllable score: "+str(spanish_syll_count))
+    syllable_score = abs(english_syll_count - spanish_syll_count)
     return syllable_score
 
 
@@ -55,13 +82,7 @@ def evaluate(sentence_en, sentence_es, sentence_es_actual):
 
 
 if __name__ == "__main__":
-
     while True:
-        sentence_en = input("Enter an English sentence: ")
-        sentence_es = input("Enter a candidate Spanish sentence: ")
-        sentence_es_actual = input("Enter the actual Spanish translation")
-        print(f"SYLLABLES ES = {getNumSyllablesES(sentence_es)}")
-        print(f"SYLLABLES ES ACTUAL = {getNumSyllablesES(sentence_es_actual)}")
-        score = evaluate(sentence_en, sentence_es, sentence_es_actual)
-        print(f'Score: {score}')
+        sentence_en = input("Enter an Spanish sentence: ")
+        print(getNumSyllablesESSentence(sentence_en))
 

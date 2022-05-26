@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 nltk.download('words')
 
 NUM_TO_TRANSLATE = 30
-NUM_BEAMS = 4
+NUM_BEAMS = 16
 INPUT_LANG_CODE = "es_XX"
 OUTPUT_LANG_CODE = "en_XX"
 LOGS_ON = True
@@ -57,9 +57,9 @@ def generate(input_sentence):
         **model_inputs,
         forced_bos_token_id=tokenizer.lang_code_to_id[OUTPUT_LANG_CODE],
         num_beams=NUM_BEAMS,
-        num_beam_groups=NUM_BEAMS/2,
+        num_beam_groups=NUM_BEAMS // 2,
         num_return_sequences=NUM_BEAMS,
-        diversity_penalty=0.6
+        diversity_penalty=2.0
     )
     
     best_candidate = []
@@ -67,13 +67,14 @@ def generate(input_sentence):
     try:
         log("INPUT SENTENCE: "+input_sentence)
         log("--------------------")
+        output_sentence = tokenizer.batch_decode(output_ids, skip_special_tokens=True)
+
         for j in range(len(output_ids)):
-            output_sentence = tokenizer.batch_decode(output_ids[j], skip_special_tokens=True)
-            print("OUTPUT SENTENCE ", str(output_sentence))
-            output_joined = " ".join(output_sentence)
+            print("OUTPUT SENTENCE ", str(output_sentence[j]))
+            output_joined = output_sentence[j]
             output_joined = output_joined.strip()
             print(output_joined)
-            score = getSyllableScore(input_sentence, output_joined)
+            score = getSyllableScore(input_sentence, strip_punct(output_joined))
             if score < best_candidate_score:
                 best_candidate_score = score
                 best_candidate = output_sentence
@@ -81,6 +82,10 @@ def generate(input_sentence):
         print("EXCEPT")
 
     return best_candidate, best_candidate_score
+
+
+def strip_punct(sent):
+    return re.sub(r'[,\.;!:?]', '', sent)
 
 
 def load_json_test_data(data_path):

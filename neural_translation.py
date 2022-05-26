@@ -11,7 +11,7 @@ if __name__ == "__main__":
     model = MBartForConditionalGeneration.from_pretrained("TuhinColumbia/spanishpoetrymany")
     tokenizer.src_lang = "es_XX"
     sentence_en_gold = "You, myself, dry like a defeated wind \n which only for a moment could hold in its arms the leaf \n it wrenched from the trees, \n how is it possible that nothing can move you now,\n that no rain can crush you, no sun give back your weariness? \n To be a purposeless transparency"
-    sentence_es = "Ballena gris"
+    sentence_es = "A pesar del perífrasis absurdo"
     model_inputs = tokenizer(sentence_es, return_tensors="pt")
     print("Started generating tokens")
     generated_tokens = model.generate(
