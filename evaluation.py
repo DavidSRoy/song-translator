@@ -63,13 +63,15 @@ def getBleuScore(reference, candidate):
 def getRhymeScore(sentence_es, sentence_en):
     es_lines = sentence_es.split('\n')
     en_lines = sentence_en.split('\n')
+    
 
     es_score = 0
     en_score = 0
     rhymeScheme = []
     for i in range(1, len(en_lines)):
         ln = en_lines[i]
-
+        print("EN LINES")
+        print(ln)
         prev = getLastWord(en_lines[i - 1])
         curr = getLastWord(ln)
 
@@ -81,21 +83,24 @@ def getRhymeScore(sentence_es, sentence_en):
     print(rhymeScheme)
     for i in range(1, len(es_lines)):
         ln = es_lines[i]
-
+        print("ES LINES")
+        print(f'{ln}.')
         prev_rhyme = Pyverse(es_lines[i - 1]).consonant_rhyme
-        rhyme = Pyverse(ln).consonant_rhyme
-        if not rhymeScheme[i - 1]:
-            sim_score = 0
-            print("HERE")
-        else:
-            sim_score = 0
-            for j in range(len(prev_rhyme)):
-                sim = 0
-                
-                if j < len(rhyme) and prev_rhyme[j] == rhyme[j]:
-                    sim += 1
-                sim_score += sim / len(prev_rhyme)
-        es_score += sim_score
+        
+        if len(ln) > 0:
+            rhyme = Pyverse(ln).consonant_rhyme
+            if i < len(rhymeScheme) and not rhymeScheme[i - 1]:
+                sim_score = 0
+                print("HERE")
+            else:
+                sim_score = 0
+                for j in range(len(prev_rhyme)):
+                    sim = 0
+                    
+                    if j < len(rhyme) and prev_rhyme[j] == rhyme[j]:
+                        sim += 1
+                    sim_score += sim / len(prev_rhyme)
+            es_score += sim_score
         
 
     return es_score

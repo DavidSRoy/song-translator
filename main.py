@@ -87,6 +87,9 @@ def generate(input_sentence):
 def strip_punct(sent):
     return re.sub(r'[,\.;!:?]', '', sent)
 
+def add_new_line(sentence):
+    return re.sub(r'[\.;!:?]', '\n', sentence)
+
 
 def load_json_test_data(data_path):
     x_test = []
@@ -141,8 +144,8 @@ def load_test_data(data_path_x, data_path_y):
             # x = ' '.join(data_x[i].splitlines())
             # y = ' '.join(data_y[i].splitlines())
 
-            x = re.sub(r'[,\.;!:?¿]', '', x)
-            y = re.sub(r'[,\.;!:?¿]', '', y)
+            # x = re.sub(r'[,\.;!:?¿]', '', x)
+            # y = re.sub(r'[,\.;!:?¿]', '', y)
 
             x_test.append(x)
             y_test.append(y)
@@ -161,7 +164,7 @@ def translate_and_evaluate(x, y):
         human_translation = y[i]
         best_candidate, best_candidate_score = generate(original_sentence)
         bleu_score = getBleuScore(human_translation, best_candidate)
-        rhyme_score = getRhymeScore(original_sentence, best_candidate)
+        rhyme_score = getRhymeScore(original_sentence, add_new_line(best_candidate))
         syllable_scores.append(best_candidate_score)
         bleu_scores.append(bleu_score)
         rhyme_scores.append(rhyme_score)
