@@ -5,12 +5,13 @@ import json
 from tqdm import tqdm
 import nltk
 import re
-from evaluation import getBleuScore, getSyllableScore, getRhymeScore
+from evaluation import getBleuScore, getSyllableScore, getRhymeScore, getNumSyllablesEN, getNumSyllablesES
 import matplotlib.pyplot as plt
+from os import path
 
 nltk.download('words')
 
-NUM_TO_TRANSLATE = 30
+NUM_TO_TRANSLATE = 1
 NUM_BEAMS = 4
 INPUT_LANG_CODE = "es_XX"
 OUTPUT_LANG_CODE = "en_XX"
@@ -72,7 +73,8 @@ def generate(input_sentence):
         for j in tqdm(range(len(output_ids))):
             output_joined = output_sentences[j]
             output_joined = output_joined.strip()
-            score = getSyllableScore(input_sentence, strip_punct(output_joined))
+            score = 0.75 * (getSyllableScore(input_sentence, strip_punct(output_joined)) / getNumSyllablesES(input_sentence)) + 0.25 * getRhymeScore(input_sentence, add_new_line(output_joined))
+
             if score < best_candidate_score:
                 best_candidate_score = score
                 best_candidate = output_joined
@@ -180,19 +182,29 @@ def translate_and_evaluate(x, y):
     save_data("bleu_scores", bleu_scores)
     save_data("rhyme_scores", rhyme_scores)
 
-    plt.scatter(syllable_scores, bleu_scores)
-    plt.xlabel('Syllable Difference')
-    plt.ylabel('Bleu Score')
-    plt.title("Syllable Difference vs Bleu Score")
-    plt.show()
-    plt.savefig('figure1.png')
+    fig, ax = plt.subplots()
+    image = ax.scatter(syllable_scores, bleu_scores, color='b')
+    outpath = "graphs/"
 
-    plt.scatter(syllable_scores, rhyme_scores)
-    plt.xlabel('Syllable Difference')
-    plt.ylabel('Rhyme Score')
-    plt.title("Rhyme Score vs Syllable Difference")
-    plt.show()
-    plt.savefig('rhyme_vs_syllable.png')
+    fpath = path.join(outpath, f"syll_vs_bleu_beam{NUM_BEAMS}.png")
+    plt.xlabel("Syllable Difference Score")
+    plt.ylabel("Bleu Score")
+    plt.title("Syllable Difference Score vs Bleu Score")
+    plt.draw()
+    fig.savefig(fpath)
+    plt.close()
+
+    fig, ax = plt.subplots()
+    image = ax.scatter(rhyme_score, bleu_scores, color='b')
+    outpath = "graphs/"
+
+    fpath = path.join(outpath, f"rhyme_vs_bleu_beam{NUM_BEAMS}.png")
+    plt.xlabel("Rhyme Score")
+    plt.ylabel("Bleu Score")
+    plt.title("Rhyme Score vs Bleu Score")
+    plt.draw()
+    fig.savefig(fpath)
+    plt.close()
 
 
 def translate_EMNLP_data():
