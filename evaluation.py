@@ -71,7 +71,7 @@ def getRhymeScore(sentence_es, sentence_en):
     for i in range(1, len(en_lines)):
         ln = en_lines[i]
         print("EN LINES")
-        print(ln)
+        print(f'{ln}.')
         prev = getLastWord(en_lines[i - 1])
         curr = getLastWord(ln)
 
@@ -85,10 +85,14 @@ def getRhymeScore(sentence_es, sentence_en):
         ln = es_lines[i]
         print("ES LINES")
         print(f'{ln}.')
-        prev_rhyme = Pyverse(es_lines[i - 1]).consonant_rhyme
+
+        if len(ln) > 0 and len(es_lines[i - 1]) > 0:
+            prev_rhyme = Pyverse(es_lines[i - 1]).consonant_rhyme
+            #ores
         
-        if len(ln) > 0:
+
             rhyme = Pyverse(ln).consonant_rhyme
+            #oras
             if i < len(rhymeScheme) and not rhymeScheme[i - 1]:
                 sim_score = 0
                 print("HERE")
@@ -103,7 +107,7 @@ def getRhymeScore(sentence_es, sentence_en):
             es_score += sim_score
         
 
-    return es_score
+    return es_score / (len(es_lines) - 1)
 
 
 def getLastWord(s):

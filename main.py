@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 
 nltk.download('words')
 
-NUM_TO_TRANSLATE = 30
+NUM_TO_TRANSLATE = 2
 NUM_BEAMS = 4
 INPUT_LANG_CODE = "es_XX"
 OUTPUT_LANG_CODE = "en_XX"
@@ -178,6 +178,7 @@ def translate_and_evaluate(x, y):
 
     save_data("syllable_scores", syllable_scores)
     save_data("bleu_scores", bleu_scores)
+    save_data("rhyme_scores", rhyme_scores)
 
     plt.scatter(syllable_scores, bleu_scores)
     plt.xlabel('Syllable Difference')
@@ -185,6 +186,13 @@ def translate_and_evaluate(x, y):
     plt.title("Syllable Difference vs Bleu Score")
     plt.show()
     plt.savefig('figure1.png')
+
+    plt.scatter(syllable_scores, rhyme_scores)
+    plt.xlabel('Syllable Difference')
+    plt.ylabel('Rhyme Score')
+    plt.title("Rhyme Score vs Syllable Difference")
+    plt.show()
+    plt.savefig('rhyme_vs_syllable.png')
 
 
 def translate_EMNLP_data():
