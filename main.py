@@ -60,7 +60,7 @@ def generate(input_sentence):
         num_beams=NUM_BEAMS,
         num_beam_groups=NUM_BEAMS // 2,
         num_return_sequences=NUM_BEAMS,
-        diversity_penalty=2.0
+        diversity_penalty=20.0
     )
     
     best_candidate = []
