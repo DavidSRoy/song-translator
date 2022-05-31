@@ -34,7 +34,6 @@ def getNumSyllablesEN(sentence):
                         syll_count = pro.syllable_count(pro_list[0])
                         total_ct -= pro.syllable_count(pro.pronunciations(last_word))
                         total_ct += syll_count
-                        print(attempt_suffix)
                         last_word = attempt_suffix
                         truncated_word = ""
                     except:
@@ -70,6 +69,16 @@ def getRhymeScore(sentence_es, sentence_en):
     rhymeScheme = []
     for i in range(1, len(en_lines)):
         ln = en_lines[i]
+<<<<<<< HEAD
+        prev = getLastWord(en_lines[i - 1])
+        curr = getLastWord(ln)
+        rhymeScheme.append(prev in pronouncing.rhymes(curr))
+
+    for i in range(1, len(es_lines)):
+        ln = es_lines[i]
+
+        if len(ln) > 1 and len(es_lines[i - 1]) > 1:
+=======
         print("EN LINES")
         print(f'{ln}.')
         prev = getLastWord(en_lines[i - 1])
@@ -87,6 +96,7 @@ def getRhymeScore(sentence_es, sentence_en):
         print(f'{ln}.')
 
         if len(ln) > 0 and len(es_lines[i - 1]) > 0:
+>>>>>>> master
             prev_rhyme = Pyverse(es_lines[i - 1]).consonant_rhyme
             #ores
         
@@ -95,7 +105,10 @@ def getRhymeScore(sentence_es, sentence_en):
             #oras
             if i < len(rhymeScheme) and not rhymeScheme[i - 1]:
                 sim_score = 0
+<<<<<<< HEAD
+=======
                 print("HERE")
+>>>>>>> master
             else:
                 sim_score = 0
                 for j in range(len(prev_rhyme)):
@@ -116,9 +129,13 @@ def getLastWord(s):
     else:
         return ''
 
+<<<<<<< HEAD
+
+=======
 def temp(sentence_es, sentence_en):
     print(f'sentence_es = {sentence_es}')
     print(f'sentence_en = {sentence_en}')
+>>>>>>> master
 
 
 def getSyllableScore(sentence_es, sentence_en):
