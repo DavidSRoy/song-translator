@@ -206,6 +206,13 @@ def translate_and_evaluate(x, y):
     fig.savefig(fpath)
     plt.close()
 
+    plt.scatter(syllable_scores, rhyme_scores)
+    plt.xlabel('Syllable Difference')
+    plt.ylabel('Rhyme Score')
+    plt.title("Rhyme Score vs Syllable Difference")
+    plt.show()
+    plt.savefig('rhyme_vs_syllable.png')
+
 
 def translate_EMNLP_data():
     x_test, y_test = load_json_test_data("data/spanishval.json")
