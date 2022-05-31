@@ -5,7 +5,7 @@ import json
 from tqdm import tqdm
 import nltk
 import re
-from evaluation import getBleuScore, getSyllableScore
+from evaluation import getBleuScore, getSyllableScore, getRhymeScore
 import matplotlib.pyplot as plt
 
 nltk.download('words')
@@ -87,6 +87,9 @@ def generate(input_sentence):
 def strip_punct(sent):
     return re.sub(r'[,\.;!:?]', '', sent)
 
+def add_new_line(sentence):
+    return re.sub(r'[\.;!:?]', '\n', sentence)
+
 
 def load_json_test_data(data_path):
     x_test = []
@@ -126,11 +129,23 @@ def load_test_data(data_path_x, data_path_y):
         data_y = data_y.split("--------------------------------------------------------------------------------")
 
         for i in range(0, len(data_x)):
-            x = ' '.join(data_x[i].splitlines())
-            y = ' '.join(data_y[i].splitlines())
+            xL = []
+            for ln in data_x[i].splitlines():
+                xL.append(ln)
+                xL.append('\n')
 
-            x = re.sub(r'[,\.;!:?¿]', '', x)
-            y = re.sub(r'[,\.;!:?¿]', '', y)
+            yL = []
+            for ln in data_y[i].splitlines():
+                yL.append(ln)
+                yL.append('\n')
+
+            x = ' '.join(xL)
+            y = ' '.join(yL)
+            # x = ' '.join(data_x[i].splitlines())
+            # y = ' '.join(data_y[i].splitlines())
+
+            # x = re.sub(r'[,\.;!:?¿]', '', x)
+            # y = re.sub(r'[,\.;!:?¿]', '', y)
 
             x_test.append(x)
             y_test.append(y)
@@ -142,21 +157,28 @@ def load_test_data(data_path_x, data_path_y):
 def translate_and_evaluate(x, y):
     bleu_scores = []
     syllable_scores = []
+    rhyme_scores = []
     for i, original_sentence in tqdm(enumerate(x)):
         if i == NUM_TO_TRANSLATE:
             break
         human_translation = y[i]
         best_candidate, best_candidate_score = generate(original_sentence)
         bleu_score = getBleuScore(human_translation, best_candidate)
+        rhyme_score = getRhymeScore(original_sentence, add_new_line(best_candidate))
         syllable_scores.append(best_candidate_score)
         bleu_scores.append(bleu_score)
+        rhyme_scores.append(rhyme_score)
 
         log(f'Bleu Score: {bleu_score}')
+        log(f'Rhyme Score: {rhyme_score}')
+        log('')
         log(f'Syllable Scores: {syllable_scores}')
         log(f'Bleu Scores: {bleu_scores}')
+        log(f'Rhyme Scores: {rhyme_scores}')
 
     save_data("syllable_scores", syllable_scores)
     save_data("bleu_scores", bleu_scores)
+    save_data("rhyme_scores", rhyme_scores)
 
     plt.scatter(syllable_scores, bleu_scores)
     plt.xlabel('Syllable Difference')
@@ -164,6 +186,13 @@ def translate_and_evaluate(x, y):
     plt.title("Syllable Difference vs Bleu Score")
     plt.show()
     plt.savefig('figure1.png')
+
+    plt.scatter(syllable_scores, rhyme_scores)
+    plt.xlabel('Syllable Difference')
+    plt.ylabel('Rhyme Score')
+    plt.title("Rhyme Score vs Syllable Difference")
+    plt.show()
+    plt.savefig('rhyme_vs_syllable.png')
 
 
 def translate_EMNLP_data():
