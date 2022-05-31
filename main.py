@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 
 nltk.download('words')
 
-NUM_TO_TRANSLATE = 2
+NUM_TO_TRANSLATE = 30
 NUM_BEAMS = 4
 INPUT_LANG_CODE = "es_XX"
 OUTPUT_LANG_CODE = "en_XX"
