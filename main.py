@@ -203,6 +203,16 @@ def translate_EMNLP_data():
     )
 
 
+def translate_song(file):
+    with open(file, 'r') as f: 
+        output = generate(f.read())
+    
+    with open('output.txt','w') as o:
+        o.write(add_new_line(output[0]))
+        o.close()
+    return output
+
+
 def translate_poem_data():
     x_test, y_test = load_test_data("data/testspanish.txt", "data/testspanishgold.txt")
     translate_and_evaluate(
@@ -216,8 +226,9 @@ model, tokenizer = load_model_and_tokenizer("fine_tuned")
 
 
 def main():
-    translate_poem_data()
-    # translate_parallel_text_data('song_en.txt')
+    #translate_poem_data()
+    translated_song = translate_song('song_en.txt')
+    print(translated_song)
 
 
 if __name__ == "__main__":
